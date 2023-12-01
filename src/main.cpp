@@ -96,7 +96,7 @@ void initialize() {
 
   // Autonomous Selector using LLEMU
   ez::as::auton_selector.add_autons({
-    Auton("test autn", safe_denial),
+    Auton("test auton", safe_denial),
     //Auton("Example Turn\n\nTurn 3 times.", turn_example),
     /*
     Auton("Drive and Turn\n\nDrive forward, turn, come back. ", drive_and_turn),
