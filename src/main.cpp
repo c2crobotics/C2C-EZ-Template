@@ -96,7 +96,7 @@ void initialize() {
 
   // Autonomous Selector using LLEMU
   ez::as::auton_selector.add_autons({
-    Auton("test auton", safe_denial),
+    Auton("test autn", safe_denial),
     //Auton("Example Turn\n\nTurn 3 times.", turn_example),
     /*
     Auton("Drive and Turn\n\nDrive forward, turn, come back. ", drive_and_turn),
@@ -189,10 +189,15 @@ double LTime = 0;
 double RPrevTime = -40000;
 double RTime = 0;
 
+int liftPos = 0;
+double liftPrevTime = -40000;
+double liftTime = 0;
+
 void opcontrol() {
   // This is preference to what you like to drive on.
-  chassis.set_drive_brake(MOTOR_BRAKE_BRAKE);
-  lift.set_brake_modes(MOTOR_BRAKE_COAST);
+  chassis.set_drive_brake(MOTOR_BRAKE_HOLD);
+  lift.set_brake_modes(MOTOR_BRAKE_HOLD);
+  flywheel.set_brake_modes(MOTOR_BRAKE_COAST);
 
   while (true) {
     
@@ -210,6 +215,25 @@ void opcontrol() {
     if(master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)){
       rachet.set_value(0);
     }
+
+    /*
+    if(abs(master.get_analog(ANALOG_RIGHT_Y)) > 80){
+      liftPrevTime = liftTime;
+      liftTime = pros::millis();
+      if(liftTime - liftPrevTime < 800){
+        if(master.get_analog(ANALOG_RIGHT_Y) > 80) {
+          liftPos++;
+        }
+        else if(master.get_analog(ANALOG_RIGHT_Y) < -80) {
+          liftPos--;
+        }
+      }
+    }
+    else {
+      lift = 0;
+      lift.set_brake_modes(MOTOR_BRAKE_HOLD);
+    }
+    */
 
     if(liftSensor.get_angle() > 1000) {
       if(abs(master.get_analog(ANALOG_RIGHT_Y)) > 80){
@@ -250,9 +274,6 @@ void opcontrol() {
         flyToggle = 0;
       }
     }
-    if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)){
-      flyToggle = 0;
-    }
 
     if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
       leftWing.set_value(1);
@@ -280,10 +301,10 @@ void opcontrol() {
       }
     }
     else if(flyToggle == 1) {
-      flywheel = 107;
+      flywheel = 117;
     }
     else if(flyToggle == -1) {
-      flywheel = -107;
+      flywheel = -117;
     }
     else {
       return;

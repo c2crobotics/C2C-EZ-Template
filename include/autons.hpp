@@ -27,6 +27,8 @@ void safe_denial();
 void moderate_denial();
 void suicide_denial();
 
+void skills();
+
 void suicide_constants();
 void default_constants();
 void lift_up_constants();
