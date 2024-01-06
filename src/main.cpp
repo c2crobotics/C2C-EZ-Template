@@ -1,42 +1,47 @@
 #include "main.h"
 
-pros::Motor topLeft(20);
-pros::Motor bottomLeft(9, true);
-pros::Motor topRight(13);
-pros::Motor bottomRight(3);
-
-pros::Motor_Group leftDrive({bottomLeft, topLeft});
-pros::Motor_Group rightDrive({bottomRight, topRight});
-
-pros::Motor leftLift(19, true);
-pros::Motor rightLift(12);
-pros::Motor_Group lift({leftLift, rightLift});
-
-pros::Motor flyLeft(10);
-pros::Motor flyRight(2, true);
-
-pros::Motor_Group flywheel({flyLeft, flyRight});
-
+// controller
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
-pros::ADIDigitalOut rightWing('A');
-pros::ADIDigitalOut leftWing('B');
-pros::ADIDigitalOut rachet('C');
+// drive motors
+pros::Motor lF(-8, pros::E_MOTOR_GEARSET_06); // left front motor. port 11, reversed
+pros::Motor lT(10, pros::E_MOTOR_GEARSET_06); // left top motor. port 12
+pros::Motor lB(-9, pros::E_MOTOR_GEARSET_06); // left bottom motor. port 13, reversed
+pros::Motor rF(7, pros::E_MOTOR_GEARSET_06); // right front motor. port 1
+pros::Motor rT(-2, pros::E_MOTOR_GEARSET_06); // right top motor. port 2, reversed
+pros::Motor rB(3, pros::E_MOTOR_GEARSET_06); // right bottom motor. port 3
 
-pros::Rotation liftSensor(18);
+// flywheel motor
+pros::Motor flywheel(-6, pros::E_MOTOR_GEARSET_06); // flywheel motor. port 17
+
+// intake motors
+pros::Motor intakeL(20, pros::E_MOTOR_GEARSET_18);
+pros::Motor intakeR(-15, pros::E_MOTOR_GEARSET_18);
+
+// motor groups
+pros::MotorGroup leftDrive({lF, lT, lB}); // left motor group
+pros::MotorGroup rightDrive({rF, rT, rB}); // right motor group
+
+pros::MotorGroup intake({intakeL, intakeR});
+
+// Inertial Sensor on port 11
+pros::Imu imu(5);
+
+pros::ADIDigitalOut rightWing('B');
+pros::ADIDigitalOut leftWing('A');
 
 // Chassis constructor
 Drive chassis (
   // Left Chassis Ports (negative port will reverse it!)
   //   the first port is the sensored port (when trackers are not used!)
-  {-9, 20}
+  {-8, 10, -9}
 
   // Right Chassis Ports (negative port will reverse it!)
   //   the first port is the sensored port (when trackers are not used!)
-  ,{3, -13}
+  ,{7, -2, 3}
 
   // IMU Port
-  ,8
+  ,5
 
   // Wheel Diameter (Remember, 4" wheels are actually 4.125!)
   //    (or tracking wheel diameter)
@@ -83,6 +88,11 @@ void initialize() {
   
   pros::delay(500); // Stop the user from doing anything while legacy ports configure.
 
+  intakeL.set_voltage_limit(5500);
+  intakeR.set_voltage_limit(5500);
+
+  intakeL.set_zero_position(pros::c::motor_get_position(20));
+
   // Configure your chassis controls
   chassis.toggle_modify_curve_with_controller(true); // Enables modifying the controller curve with buttons on the joysticks
   chassis.set_active_brake(0); // Sets the active brake kP. We recommend 0.1.
@@ -96,7 +106,7 @@ void initialize() {
 
   // Autonomous Selector using LLEMU
   ez::as::auton_selector.add_autons({
-    Auton("test auton", safe_denial),
+    Auton("6 ball", suicide_score),
     //Auton("Example Turn\n\nTurn 3 times.", turn_example),
     /*
     Auton("Drive and Turn\n\nDrive forward, turn, come back. ", drive_and_turn),
@@ -106,8 +116,6 @@ void initialize() {
     Auton("Interference\n\nAfter driving forward, robot performs differently if interfered or not.", interfered_example),
     */
   });
-
-  liftSensor.reset_position();
 
   // Initialize chassis and auton selector
   chassis.initialize();
@@ -183,137 +191,121 @@ void autonomous() {
  * 1 // Toggle on forwards
  * -1 // Toggle on reverse
 */
+
 int flyToggle = 0;
-double LPrevTime = -40000;
-double LTime = 0;
-double RPrevTime = -40000;
-double RTime = 0;
+double fPrevTime = -40000;
+double fTime = 0;
 
-int liftPos = 0;
-double liftPrevTime = -40000;
-double liftTime = 0;
-
+int intakeToggle = 0;
+double iPrevTime = -40000;
+double iTime = 0;
+/**
+ * Runs in driver control
+ */
 void opcontrol() {
-  // This is preference to what you like to drive on.
-  chassis.set_drive_brake(MOTOR_BRAKE_HOLD);
-  lift.set_brake_modes(MOTOR_BRAKE_HOLD);
-  flywheel.set_brake_modes(MOTOR_BRAKE_COAST);
+    chassis.set_drive_brake(MOTOR_BRAKE_HOLD);
+    flywheel.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    intakeL.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    intakeR.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
-  while (true) {
-    
-    //chassis.tank(); // Tank control
-    chassis.arcade_standard(ez::SPLIT); // Standard split arcade
-    // chassis.arcade_standard(ez::SINGLE); // Standard single arcade
-    // chassis.arcade_flipped(ez::SPLIT); // Flipped split arcade
-    // chassis.arcade_flipped(ez::SINGLE); // Flipped single arcade
+    double ivanSens = 0.6;
+    double vincentSens = 0.7;
+    double devSens = 0.75;
 
-    // 5 degrees, 500 centidegrees
+    double driverSens = devSens;
 
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)){
-      rachet.set_value(1);
-    }
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT)){
-      rachet.set_value(0);
-    }
+    // controller
+    // loop to continuously update motors
+    while (true) {
+        //pros::lcd::print(3, "Motor: %f", pros::c::motor_get_position(20));
 
-    /*
-    if(abs(master.get_analog(ANALOG_RIGHT_Y)) > 80){
-      liftPrevTime = liftTime;
-      liftTime = pros::millis();
-      if(liftTime - liftPrevTime < 800){
-        if(master.get_analog(ANALOG_RIGHT_Y) > 80) {
-          liftPos++;
+        // get joystick positions
+        chassis.arcade_standard(ez::SPLIT); // Standard split arcade
+
+        //Macro Code//////////////////////////////////////////////////////////////
+        if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){
+            fPrevTime = fTime;
+            fTime = pros::millis();
+            if(fTime - fPrevTime < 400){
+                flyToggle = 1;
+            }
+            else{
+                flyToggle = 0;
+            }
+        }  
+        if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1)){
+            iPrevTime = iTime;
+            iTime = pros::millis();
+            if(iTime - iPrevTime < 400){
+                intakeToggle = 1;
+            }
+            else{
+                intakeToggle = 0;
+            }
         }
-        else if(master.get_analog(ANALOG_RIGHT_Y) < -80) {
-          liftPos--;
+///////////////////////////////////////////////////////////////////////////////////
+
+        if(flyToggle == 0) {
+            if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
+                flywheel = -90;
+            }
+            else {
+                flywheel = 0;
+            }
         }
-      }
-    }
-    else {
-      lift = 0;
-      lift.set_brake_modes(MOTOR_BRAKE_HOLD);
-    }
-    */
+        else if(flyToggle == 1) {
+            flywheel = 120;
+        }
+        else {
+            return;
+        }
 
-    if(liftSensor.get_angle() > 1000) {
-      if(abs(master.get_analog(ANALOG_RIGHT_Y)) > 80){
-        lift = master.get_analog(ANALOG_RIGHT_Y);
-      }
-      else {
-        lift = 0;
-        lift.set_brake_modes(MOTOR_BRAKE_HOLD);
-      }
-    }
-    else {
-      if(master.get_analog(ANALOG_RIGHT_Y) > 80){
-        lift = master.get_analog(ANALOG_RIGHT_Y);
-      }
-      else {
-        lift.set_brake_modes(MOTOR_BRAKE_COAST);
-        lift = 0;
-      }
-    }
+        if(intakeToggle == 0) {
+            if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
+                intake = 120;
+            }
+            else {
+              if(pros::c::motor_get_position(20) < 100) {
+                intake.set_brake_modes(MOTOR_BRAKE_BRAKE);
+                intake = 0;
+                intake.set_brake_modes(MOTOR_BRAKE_COAST);
+              }
+              else {
+                intake = -pros::c::motor_get_position(20)/5;
+              }
+            }
+        }
+        else if(intakeToggle == 1) {
+            if(pros::c::motor_get_position(20) > 550) {
+              intake = 20;
+            }
+            else if(pros::c::motor_get_position(20) > 650) {
+              intake = 0;
+              intake.set_brake_modes(MOTOR_BRAKE_HOLD);
+            }
+            else {
+              intake = 120;
+            }
+        }
+        else {
+            return;
+        }
 
-    if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2)){
-      LPrevTime = LTime;
-      LTime = pros::millis();
-      if(LTime - LPrevTime < 400){
-        flyToggle = 1;
-      }
-      else{
-        flyToggle = 0;
-      }
-    }
-    if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)){
-      RPrevTime = RTime;
-      RTime = pros::millis();
-      if(RTime - RPrevTime < 400){
-        flyToggle = -1;
-      }
-      else{
-        flyToggle = 0;
-      }
-    }
-
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
+    //WINGS
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)){
       leftWing.set_value(1);
     }
     else{
       leftWing.set_value(0);
     }
-
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
+    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)){
       rightWing.set_value(1);
     }
     else{
       rightWing.set_value(0);
     }
 
-    if(flyToggle == 0) {
-      if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)){
-        flywheel = 87;
-      }
-      else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
-        flywheel = -87;
-      }
-      else {
-        flywheel = 0;
-      }
+        // delay to save resources
+        pros::delay(ez::util::DELAY_TIME);
     }
-    else if(flyToggle == 1) {
-      flywheel = 117;
-    }
-    else if(flyToggle == -1) {
-      flywheel = -117;
-    }
-    else {
-      return;
-    }
-  
-    // . . .
-    // Put more user control code here!
-    // . . .
-
-    pros::delay(ez::util::DELAY_TIME); // This is used for timer calculations!  Keep this ez::util::DELAY_TIME
-  }
 }

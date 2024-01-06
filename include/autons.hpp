@@ -3,8 +3,8 @@
 #include "EZ-Template/drive/drive.hpp"
 
 extern Drive chassis;
-extern pros::Motor_Group flywheel;
-extern pros::Motor_Group lift;
+extern pros::Motor flywheel;
+extern pros::Motor_Group intake;
 extern pros::ADIDigitalOut rightWing;
 extern pros::ADIDigitalOut leftWing;
 extern pros::ADIDigitalOut rachet;
@@ -29,6 +29,7 @@ void suicide_denial();
 void skillsAuto();
 
 void skills();
+void skills2();
 
 void suicide_constants();
 void default_constants();
