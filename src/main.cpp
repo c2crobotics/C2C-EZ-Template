@@ -4,19 +4,19 @@
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
 // drive motors
-pros::Motor lF(-8, pros::E_MOTOR_GEARSET_06); // left front motor. port 11, reversed
-pros::Motor lT(10, pros::E_MOTOR_GEARSET_06); // left top motor. port 12
-pros::Motor lB(-9, pros::E_MOTOR_GEARSET_06); // left bottom motor. port 13, reversed
-pros::Motor rF(7, pros::E_MOTOR_GEARSET_06); // right front motor. port 1
+pros::Motor lF(-20, pros::E_MOTOR_GEARSET_06); // left front motor. port 11, reversed
+pros::Motor lT(9, pros::E_MOTOR_GEARSET_06); // left top motor. port 12
+pros::Motor lB(-10, pros::E_MOTOR_GEARSET_06); // left bottom motor. port 13, reversed
+pros::Motor rF(11, pros::E_MOTOR_GEARSET_06); // right front motor. port 1
 pros::Motor rT(-2, pros::E_MOTOR_GEARSET_06); // right top motor. port 2, reversed
-pros::Motor rB(3, pros::E_MOTOR_GEARSET_06); // right bottom motor. port 3
+pros::Motor rB(1, pros::E_MOTOR_GEARSET_06); // right bottom motor. port 3
 
 // flywheel motor
-pros::Motor flywheel(-6, pros::E_MOTOR_GEARSET_06); // flywheel motor. port 17
+pros::Motor flywheel(-21, pros::E_MOTOR_GEARSET_06); // flywheel motor. port 17
 
 // intake motors
-pros::Motor intakeL(20, pros::E_MOTOR_GEARSET_18);
-pros::Motor intakeR(-15, pros::E_MOTOR_GEARSET_18);
+pros::Motor intakeL(19, pros::E_MOTOR_GEARSET_18);
+pros::Motor intakeR(-12, pros::E_MOTOR_GEARSET_18);
 
 // motor groups
 pros::MotorGroup leftDrive({lF, lT, lB}); // left motor group
@@ -25,7 +25,7 @@ pros::MotorGroup rightDrive({rF, rT, rB}); // right motor group
 pros::MotorGroup intake({intakeL, intakeR});
 
 // Inertial Sensor on port 11
-pros::Imu imu(5);
+pros::Imu imu(3);
 
 pros::ADIDigitalOut rightWing('B');
 pros::ADIDigitalOut leftWing('A');
@@ -34,11 +34,11 @@ pros::ADIDigitalOut leftWing('A');
 Drive chassis (
   // Left Chassis Ports (negative port will reverse it!)
   //   the first port is the sensored port (when trackers are not used!)
-  {-8, 10, -9}
+  {-20, 9, -10}
 
   // Right Chassis Ports (negative port will reverse it!)
   //   the first port is the sensored port (when trackers are not used!)
-  ,{7, -2, 3}
+  ,{11, -2, 1}
 
   // IMU Port
   ,5
@@ -106,7 +106,7 @@ void initialize() {
 
   // Autonomous Selector using LLEMU
   ez::as::auton_selector.add_autons({
-    Auton("6 ball", suicide_score),
+    Auton("elims", suicide_score),
     //Auton("Example Turn\n\nTurn 3 times.", turn_example),
     /*
     Auton("Drive and Turn\n\nDrive forward, turn, come back. ", drive_and_turn),
@@ -247,14 +247,14 @@ void opcontrol() {
 
         if(flyToggle == 0) {
             if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
-                flywheel = -90;
+                flywheel = -120;
             }
             else {
                 flywheel = 0;
             }
         }
         else if(flyToggle == 1) {
-            flywheel = 120;
+            flywheel = 110;
         }
         else {
             return;
@@ -262,7 +262,13 @@ void opcontrol() {
 
         if(intakeToggle == 0) {
             if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
-                intake = 120;
+                if(pros::c::motor_get_position(20) < 350 && pros::c::motor_get_position(20) > 300){
+                  intake = 10;
+                  intake.set_brake_modes(MOTOR_BRAKE_HOLD);
+                }
+                else {
+                  intake = 120;
+                }
             }
             else {
               if(pros::c::motor_get_position(20) < 100) {
