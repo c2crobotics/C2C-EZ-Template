@@ -262,7 +262,7 @@ void opcontrol() {
 
         if(intakeToggle == 0) {
             if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
-                if(pros::c::motor_get_position(19) < 400 && pros::c::motor_get_position(19) > 300){
+                if(pros::c::motor_get_position(19) < 350 && pros::c::motor_get_position(19) > 250){
                   intake = 10;
                   intake.set_brake_modes(MOTOR_BRAKE_HOLD);
                 }
