@@ -12,7 +12,7 @@ pros::Motor rT(-2, pros::E_MOTOR_GEARSET_06); // right top motor. port 2, revers
 pros::Motor rB(1, pros::E_MOTOR_GEARSET_06); // right bottom motor. port 3
 
 // flywheel motor
-pros::Motor flywheel(-21, pros::E_MOTOR_GEARSET_06); // flywheel motor. port 17
+pros::Motor flywheel(-21, pros::E_MOTOR_GEARSET_06); // flywheel motor. port 21
 
 // intake motors
 pros::Motor intakeL(19, pros::E_MOTOR_GEARSET_18);
@@ -106,7 +106,7 @@ void initialize() {
 
   // Autonomous Selector using LLEMU
   ez::as::auton_selector.add_autons({
-    Auton("skills auton, shooting only", skills),
+    Auton("skills", skills),
     //Auton("Example Turn\n\nTurn 3 times.", turn_example),
     /*
     Auton("Drive and Turn\n\nDrive forward, turn, come back. ", drive_and_turn),
