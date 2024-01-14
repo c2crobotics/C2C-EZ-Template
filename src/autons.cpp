@@ -413,12 +413,12 @@ void skills() {
   flywheel = 120;
   pros::delay(500);
   intake = 0;
-  pros::delay(14000);
+  pros::delay(0);
   chassis.set_swing_pid(ez::LEFT_SWING, -25, 50);
   chassis.wait_drive();
   chassis.set_drive_pid(-2, 40);
   chassis.wait_drive();
-  pros::delay(20000);
+  pros::delay(30000);
   chassis.set_swing_pid(ez::LEFT_SWING, 20, 50);
   chassis.wait_drive();
   chassis.set_drive_pid(18, 40);
@@ -427,14 +427,14 @@ void skills() {
   chassis.wait_drive();
   chassis.set_drive_pid(72, DRIVE_SPEED);
   chassis.wait_drive();
-  rightWing.set_value(1);
   chassis.set_swing_pid(ez::RIGHT_SWING, -45, 50);
   chassis.wait_drive();
-  rightWing.set_value(0);
+  leftWing.set_value(1);
   intake = 100;
   chassis.set_drive_pid(40, DRIVE_SPEED);
   chassis.wait_drive();
   intake = 0;
+  /*
   chassis.set_drive_pid(-10, DRIVE_SPEED);
   chassis.wait_drive();
   chassis.set_swing_pid(ez::RIGHT_SWING, 0, 80);
@@ -453,4 +453,5 @@ void skills() {
   chassis.wait_drive();
   chassis.set_drive_pid(-20, DRIVE_SPEED);
   chassis.wait_drive();
+  */
 }
