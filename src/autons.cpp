@@ -441,7 +441,7 @@ void skills() {
   flywheel = 120;
   pros::delay(500);
   intake = 0;
-  pros::delay(15000);
+  pros::delay(14000);
   chassis.set_swing_pid(ez::LEFT_SWING, -25, 50);
   chassis.wait_drive();
   chassis.set_drive_pid(-2, 40);
