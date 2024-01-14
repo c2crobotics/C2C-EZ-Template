@@ -437,20 +437,23 @@ void suicide_denial() {
 }
 
 void skills() {
+  intake = -30;
   flywheel = 120;
+  pros::delay(500);
+  intake = 0;
   pros::delay(15000);
-  chassis.set_swing_pid(ez::LEFT_SWING, -35, 50);
+  chassis.set_swing_pid(ez::LEFT_SWING, -25, 50);
   chassis.wait_drive();
   chassis.set_drive_pid(-2, 40);
   chassis.wait_drive();
-  pros::delay(25000);
-  chassis.set_swing_pid(ez::LEFT_SWING, 10, 50);
+  pros::delay(20000);
+  chassis.set_swing_pid(ez::LEFT_SWING, 20, 50);
   chassis.wait_drive();
-  chassis.set_drive_pid(14, 40);
+  chassis.set_drive_pid(18, 40);
   chassis.wait_drive();
   chassis.set_swing_pid(ez::RIGHT_SWING, 0, 80);
   chassis.wait_drive();
-  chassis.set_drive_pid(72, DRIVE_SPEED);
+  /*chassis.set_drive_pid(72, DRIVE_SPEED);
   chassis.wait_drive();
   rightWing.set_value(1);
   chassis.set_swing_pid(ez::RIGHT_SWING, -45, 50);
@@ -478,4 +481,5 @@ void skills() {
   chassis.wait_drive();
   chassis.set_drive_pid(-20, DRIVE_SPEED);
   chassis.wait_drive();
+  */
 }

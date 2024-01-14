@@ -41,7 +41,7 @@ Drive chassis (
   ,{11, -2, 1}
 
   // IMU Port
-  ,5
+  ,3
 
   // Wheel Diameter (Remember, 4" wheels are actually 4.125!)
   //    (or tracking wheel diameter)
@@ -106,7 +106,7 @@ void initialize() {
 
   // Autonomous Selector using LLEMU
   ez::as::auton_selector.add_autons({
-    Auton("elims", suicide_score),
+    Auton("skills auton, shooting only", skills),
     //Auton("Example Turn\n\nTurn 3 times.", turn_example),
     /*
     Auton("Drive and Turn\n\nDrive forward, turn, come back. ", drive_and_turn),
@@ -262,7 +262,7 @@ void opcontrol() {
 
         if(intakeToggle == 0) {
             if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
-                if(pros::c::motor_get_position(20) < 350 && pros::c::motor_get_position(20) > 300){
+                if(pros::c::motor_get_position(19) < 400 && pros::c::motor_get_position(19) > 300){
                   intake = 10;
                   intake.set_brake_modes(MOTOR_BRAKE_HOLD);
                 }
@@ -271,21 +271,21 @@ void opcontrol() {
                 }
             }
             else {
-              if(pros::c::motor_get_position(20) < 100) {
+              if(pros::c::motor_get_position(19) < 100) {
                 intake.set_brake_modes(MOTOR_BRAKE_BRAKE);
                 intake = 0;
                 intake.set_brake_modes(MOTOR_BRAKE_COAST);
               }
               else {
-                intake = -pros::c::motor_get_position(20)/5;
+                intake = -pros::c::motor_get_position(19)/7;
               }
             }
         }
         else if(intakeToggle == 1) {
-            if(pros::c::motor_get_position(20) > 550) {
+            if(pros::c::motor_get_position(19) > 550) {
               intake = 20;
             }
-            else if(pros::c::motor_get_position(20) > 650) {
+            else if(pros::c::motor_get_position(19) > 650) {
               intake = 0;
               intake.set_brake_modes(MOTOR_BRAKE_HOLD);
             }
