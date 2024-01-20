@@ -90,8 +90,8 @@ void initialize() {
 
   intakeL.set_voltage_limit(5500);
   intakeR.set_voltage_limit(5500);
-
-  intakeL.set_zero_position(pros::c::motor_get_position(20));
+  
+  intakeL.set_zero_position(pros::c::motor_get_position(19));
 
   // Configure your chassis controls
   chassis.toggle_modify_curve_with_controller(true); // Enables modifying the controller curve with buttons on the joysticks
@@ -106,7 +106,7 @@ void initialize() {
 
   // Autonomous Selector using LLEMU
   ez::as::auton_selector.add_autons({
-    Auton("skills", skills),
+    Auton("ball rush", suicide_score),
     //Auton("Example Turn\n\nTurn 3 times.", turn_example),
     /*
     Auton("Drive and Turn\n\nDrive forward, turn, come back. ", drive_and_turn),
@@ -206,7 +206,7 @@ void opcontrol() {
     chassis.set_drive_brake(MOTOR_BRAKE_HOLD);
     flywheel.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
     intakeL.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-    intakeR.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    intakeR.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);                                  
 
     double ivanSens = 0.6;
     double vincentSens = 0.7;
@@ -217,7 +217,7 @@ void opcontrol() {
     // controller
     // loop to continuously update motors
     while (true) {
-        //pros::lcd::print(3, "Motor: %f", pros::c::motor_get_position(20));
+        pros::lcd::print(3, "Motor: %f", pros::c::motor_get_position(19));
 
         // get joystick positions
         chassis.arcade_standard(ez::SPLIT); // Standard split arcade
@@ -244,6 +244,11 @@ void opcontrol() {
             }
         }
 ///////////////////////////////////////////////////////////////////////////////////
+
+        if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A) || master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)){
+          intakeL.set_zero_position(pros::c::motor_get_position(19));
+          pros::lcd::print(4, "Sadge");
+        }
 
         if(flyToggle == 0) {
             if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
