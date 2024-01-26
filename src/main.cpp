@@ -91,7 +91,7 @@ void initialize() {
   intakeL.set_voltage_limit(5500);
   intakeR.set_voltage_limit(5500);
   
-  intakeL.set_zero_position(pros::c::motor_get_position(19));
+  intakeL.set_zero_position(intakeL.get_position());
 
   // Configure your chassis controls
   chassis.toggle_modify_curve_with_controller(true); // Enables modifying the controller curve with buttons on the joysticks
@@ -106,7 +106,7 @@ void initialize() {
 
   // Autonomous Selector using LLEMU
   ez::as::auton_selector.add_autons({
-    Auton("ball rush", suicide_score),
+    Auton("6 ball", safe_score),
     //Auton("Example Turn\n\nTurn 3 times.", turn_example),
     /*
     Auton("Drive and Turn\n\nDrive forward, turn, come back. ", drive_and_turn),
@@ -217,7 +217,7 @@ void opcontrol() {
     // controller
     // loop to continuously update motors
     while (true) {
-        pros::lcd::print(3, "Motor: %f", pros::c::motor_get_position(19));
+        pros::lcd::print(3, "Motor: %f", intakeL.get_position());
 
         // get joystick positions
         chassis.arcade_standard(ez::SPLIT); // Standard split arcade
@@ -245,9 +245,8 @@ void opcontrol() {
         }
 ///////////////////////////////////////////////////////////////////////////////////
 
-        if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A) || master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)){
-          intakeL.set_zero_position(pros::c::motor_get_position(19));
-          pros::lcd::print(4, "Sadge");
+        if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)){
+          intakeL.set_zero_position(0);
         }
 
         if(flyToggle == 0) {
@@ -267,7 +266,7 @@ void opcontrol() {
 
         if(intakeToggle == 0) {
             if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
-                if(pros::c::motor_get_position(19) < 350 && pros::c::motor_get_position(19) > 250){
+                if(intakeL.get_position() < 350 && intakeL.get_position() > 250){
                   intake = 10;
                   intake.set_brake_modes(MOTOR_BRAKE_HOLD);
                 }
@@ -276,21 +275,21 @@ void opcontrol() {
                 }
             }
             else {
-              if(pros::c::motor_get_position(19) < 100) {
+              if(intakeL.get_position() < 100) {
                 intake.set_brake_modes(MOTOR_BRAKE_BRAKE);
                 intake = 0;
                 intake.set_brake_modes(MOTOR_BRAKE_COAST);
               }
               else {
-                intake = -pros::c::motor_get_position(19)/7;
+                intake = -intakeL.get_position()/7;
               }
             }
         }
         else if(intakeToggle == 1) {
-            if(pros::c::motor_get_position(19) > 550) {
+            if(intakeL.get_position() > 550) {
               intake = 20;
             }
-            else if(pros::c::motor_get_position(19) > 650) {
+            else if(intakeL.get_position() > 650) {
               intake = 0;
               intake.set_brake_modes(MOTOR_BRAKE_HOLD);
             }

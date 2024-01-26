@@ -53,15 +53,17 @@ void test() {
   intake.set_brake_modes(MOTOR_BRAKE_HOLD);
   flywheel.set_brake_mode(MOTOR_BRAKE_COAST);
 
-  chassis.set_drive_pid(55, 60);
-  chassis.wait_drive();
-
-  chassis.set_drive_pid(-20, 80);
-  chassis.wait_drive();
-
+  leftWing.set_value(1);
   intake = -127;
-  pros::delay(1000);
+  pros::delay(400);
+  leftWing.set_value(0);
   intake = 0;
+
+  chassis.set_swing_pid(ez::LEFT_SWING, 45, 60);
+  chassis.wait_drive();
+
+  chassis.set_turn_pid(-45, 80);
+  chassis.wait_drive();
 }
 
 //6 ball goal side
@@ -72,12 +74,10 @@ void suicide_score() {
 
   chassis.set_angle(-11.31);
 
-  intake = -15;
-  rightWing.set_value(1);
+  intake = -13;
   chassis.set_drive_pid(48, DRIVE_SPEED);
-  pros::delay(160);
-  rightWing.set_value(0);
   chassis.wait_drive();
+  
   pros::delay(10);
   intake = 127;
 
@@ -138,7 +138,7 @@ void suicide_score() {
   chassis.set_turn_pid(-90, TURN_SPEED);
   chassis.wait_drive();
 */
-  intake = -127;
+  //intake = -127;
   /*theory*/
 
   /*intake = -20;
@@ -278,6 +278,40 @@ void moderate_score() {
   // chassis.wait_drive();
 }
 
+void safe_score(){
+  chassis.set_drive_brake(MOTOR_BRAKE_BRAKE);
+  intake.set_brake_modes(MOTOR_BRAKE_HOLD);
+  flywheel.set_brake_mode(MOTOR_BRAKE_COAST);
+
+  leftWing.set_value(1);
+  intake = -127;
+  pros::delay(400);
+  leftWing.set_value(0);
+  intake = 0;
+
+  chassis.set_swing_pid(ez::LEFT_SWING, 45, 60);
+  chassis.wait_drive();
+
+  chassis.set_turn_pid(-45, 80);
+  chassis.wait_drive();
+
+  intake = 127;
+
+  chassis.set_drive_pid(15, DRIVE_SPEED);
+  chassis.wait_drive();
+
+  chassis.set_swing_pid(ez::RIGHT_SWING, -90, SWING_SPEED);
+  chassis.wait_drive();
+
+  intake = 0;
+
+  chassis.set_drive_pid(12, 127);
+  chassis.wait_drive();
+
+  chassis.set_swing_pid(ez::RIGHT_SWING, 0, SWING_SPEED);
+  chassis.wait_drive();
+}
+
 void safe_denial() {
   chassis.set_drive_brake(MOTOR_BRAKE_BRAKE);
   intake.set_brake_modes(MOTOR_BRAKE_HOLD);
@@ -391,7 +425,7 @@ void suicide_denial() {
 
   chassis.set_angle(11.31);
 
-  intake = -15;
+  intake = -13;
   leftWing.set_value(1);
   chassis.set_drive_pid(48, DRIVE_SPEED);
   pros::delay(160);
@@ -446,8 +480,6 @@ void skills() {
   chassis.set_drive_pid(10, DRIVE_SPEED);
   chassis.wait_drive();
   chassis.set_swing_pid(ez::RIGHT_SWING, -135, 120);
-  leftWing.set_value(1);
-  rightWing.set_value(1);
   chassis.wait_drive();
   chassis.set_drive_pid(30, DRIVE_SPEED);
   chassis.wait_drive();
@@ -456,6 +488,8 @@ void skills() {
   chassis.set_swing_pid(ez::RIGHT_SWING, 0, 60);
   chassis.wait_drive();
   intake = 100;
+  leftWing.set_value(1);
+  rightWing.set_value(1);
   chassis.set_drive_pid(30, DRIVE_SPEED);
   chassis.wait_drive();
   chassis.set_drive_pid(-20, DRIVE_SPEED);
