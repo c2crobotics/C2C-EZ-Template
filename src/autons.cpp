@@ -43,8 +43,8 @@ void lift_up_constants() {
 }
 
 void modified_exit_condition() {
-  chassis.set_exit_condition(chassis.turn_exit, 10, 1, 50, 5, 10, 10);
-  chassis.set_exit_condition(chassis.swing_exit, 10, 1, 50, 5, 10, 10);
+  chassis.set_exit_condition(chassis.turn_exit, 10, 1, 50, 3, 10, 10);
+  chassis.set_exit_condition(chassis.swing_exit, 10, 1, 50, 3, 10, 10);
   chassis.set_exit_condition(chassis.drive_exit, 10, 50, 50, 150, 10, 10);
 }
 
@@ -53,17 +53,8 @@ void test() {
   intake.set_brake_modes(MOTOR_BRAKE_HOLD);
   flywheel.set_brake_mode(MOTOR_BRAKE_COAST);
 
-  leftWing.set_value(1);
-  intake = -127;
-  pros::delay(400);
-  leftWing.set_value(0);
-  intake = 0;
-
-  chassis.set_swing_pid(ez::LEFT_SWING, 45, 60);
-  chassis.wait_drive();
-
-  chassis.set_turn_pid(-45, 80);
-  chassis.wait_drive();
+  chassis.set_drive_pid(24, DRIVE_SPEED);
+  //chassis.set_turn_pid(90, TURN_SPEED);
 }
 
 //6 ball goal side
@@ -129,128 +120,27 @@ void suicide_score() {
   chassis.set_swing_pid(ez::RIGHT_SWING, 50, SWING_SPEED);
   chassis.wait_drive();
 
-  chassis.set_drive_pid(-20, DRIVE_SPEED);
+  chassis.set_turn_pid(230, TURN_SPEED);
   chassis.wait_drive();
 
- /*chassis.set_drive_pid(-45, DRIVE_SPEED);
+  intake = -18;
+  chassis.set_drive_pid(36, DRIVE_SPEED);
   chassis.wait_drive();
 
-  chassis.set_turn_pid(-90, TURN_SPEED);
-  chassis.wait_drive();
-*/
-  //intake = -127;
-  /*theory*/
-
-  /*intake = -20;
-  chassis.set_drive_pid(20, DRIVE_SPEED);
-  chassis.wait_drive();
   intake = 0;
-
-  chassis.set_drive_pid(-30, DRIVE_SPEED);
+  chassis.set_turn_pid(50, TURN_SPEED);
   chassis.wait_drive();
 
-  intake = 50;
-  chassis.set_turn_pid(100, TURN_SPEED);
+  intake = 30;
+  chassis.set_drive_pid(36, DRIVE_SPEED);
+  chassis.wait_drive();
+
+  intake = 127;
+  chassis.set_swing_pid(ez::RIGHT_SWING, 0, SWING_SPEED);
   chassis.wait_drive();
 
   chassis.set_drive_pid(24, DRIVE_SPEED);
   chassis.wait_drive();
-  */
-
-  //chassis.set_swing_pid(ez::RIGHT_SWING)
-
-  // chassis.set_drive_brake(MOTOR_BRAKE_BRAKE);
-  // lift.set_brake_modes(MOTOR_BRAKE_HOLD);
-  // flywheel.set_brake_modes(MOTOR_BRAKE_COAST);
-
-  // flywheel = -127;
-  // chassis.set_drive_pid(2, DRIVE_SPEED);
-  // chassis.wait_drive();
-
-  // chassis.set_drive_pid(-33, 125);
-  // chassis.wait_drive();
-
-  // chassis.set_turn_pid(135, TURN_SPEED);
-  
-  // chassis.wait_drive();
-
-  // flywheel = 0;
-
-  // chassis.set_drive_pid(17, DRIVE_SPEED);
-  // chassis.wait_drive();
-
-  // //outtake and push
-  // rightWing.set_value(1);
-  // lift = 127;
-  // pros::delay(200);
-  // rightWing.set_value(0);
-
-  // chassis.set_drive_pid(7, DRIVE_SPEED);
-  // chassis.wait_drive();
-
-  // leftWing.set_value(1);
-  // lift = 0;
-
-  // //need faster speed idk why
-  // chassis.set_swing_pid(ez::RIGHT_SWING, 90, DRIVE_SPEED);
-  // chassis.wait_drive();
-
-  // leftWing.set_value(0);
-
-  // chassis.set_drive_pid(14, 127);
-  // chassis.wait_drive();
-
-  // chassis.set_swing_pid(ez::RIGHT_SWING, 180, SWING_SPEED);
-  // chassis.wait_drive();
-
-  // chassis.set_drive_pid(-22, DRIVE_SPEED);
-  // chassis.wait_drive();
-
-  // flywheel = -80;
-
-  // chassis.set_turn_pid(50, TURN_SPEED);
-  // lift = -115;
-  // chassis.wait_drive();
-  // lift = 0;
-
-  // chassis.set_drive_pid(40, DRIVE_SPEED);
-  // chassis.wait_drive();
-
-  // pros::delay(200);
-
-  // chassis.set_turn_pid(180, TURN_SPEED);
-  // chassis.wait_drive();
-
-  // leftWing.set_value(1);
-
-  // lift = 100;
-  // chassis.set_drive_pid(36, 127);
-  // chassis.wait_drive();
-  // lift = 0;
-
-  // leftWing.set_value(0);
-
-  // lift = -127;
-  // chassis.set_drive_pid(-24, DRIVE_SPEED);
-  // chassis.wait_drive();
-
-  // chassis.set_turn_pid(-45, TURN_SPEED);
-  // chassis.wait_drive();
-
-  // chassis.set_drive_pid(26, DRIVE_SPEED);
-  // chassis.wait_drive();
-
-  // chassis.set_drive_pid(-18, DRIVE_SPEED);
-  // chassis.wait_drive();
-
-  // chassis.set_turn_pid(180, TURN_SPEED);
-  // chassis.wait_drive();
-
-  // lift = 127;
-  // chassis.set_drive_pid(20, DRIVE_SPEED);
-  // chassis.wait_drive();
-  // lift = 0;
-  // flywheel = 0;
 }
 
 void moderate_score() {
@@ -284,13 +174,15 @@ void safe_score(){
   flywheel.set_brake_mode(MOTOR_BRAKE_COAST);
 
   leftWing.set_value(1);
-  intake = -127;
   pros::delay(400);
   leftWing.set_value(0);
-  intake = 0;
 
   chassis.set_swing_pid(ez::LEFT_SWING, 45, 60);
   chassis.wait_drive();
+
+  intake = -127;
+  pros::delay(400);
+  intake = 0;
 
   chassis.set_turn_pid(-45, 80);
   chassis.wait_drive();
@@ -321,7 +213,7 @@ void safe_denial() {
   pros::delay(1000);
   intake = 0;
 
-  chassis.set_swing_pid(ez::RIGHT_SWING, -130, 40);
+  chassis.set_swing_pid(ez::RIGHT_SWING, -135, 40);
   chassis.wait_drive();
 
   chassis.set_drive_pid(5, 20);
@@ -334,7 +226,7 @@ void safe_denial() {
   chassis.wait_drive();
 
   intake = 80;
-  chassis.set_drive_pid(38, DRIVE_SPEED);
+  chassis.set_drive_pid(40, DRIVE_SPEED);
   chassis.wait_drive();
   intake = -20;
 

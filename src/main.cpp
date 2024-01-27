@@ -106,7 +106,7 @@ void initialize() {
 
   // Autonomous Selector using LLEMU
   ez::as::auton_selector.add_autons({
-    Auton("6 ball", safe_score),
+    Auton("6 ball killer", suicide_score),
     //Auton("Example Turn\n\nTurn 3 times.", turn_example),
     /*
     Auton("Drive and Turn\n\nDrive forward, turn, come back. ", drive_and_turn),
@@ -258,7 +258,7 @@ void opcontrol() {
             }
         }
         else if(flyToggle == 1) {
-            flywheel = 110;
+            flywheel = 100;
         }
         else {
             return;
