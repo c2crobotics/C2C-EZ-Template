@@ -346,7 +346,7 @@ void skills() {
   chassis.wait_drive();
   chassis.set_drive_pid(-2, DRIVE_SPEED);
   chassis.wait_drive();
-  pros::delay(3000);
+  pros::delay(30000);
   chassis.set_swing_pid(ez::LEFT_SWING, 20,80);
   flywheel = 0;
   chassis.wait_drive();
