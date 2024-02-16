@@ -48,18 +48,7 @@ void modified_exit_condition() {
   chassis.set_exit_condition(chassis.drive_exit, 10, 50, 50, 150, 10, 10);
 }
 
-void test() {
-  intake = 60;
-  pros::delay(500);
-  intake = 10;
-  chassis.set_drive_pid(-5, DRIVE_SPEED);
-  chassis.wait_drive();
-  intake = -127;
-  pros::delay(200);
-  intake = 0;
-  chassis.set_turn_pid(90, TURN_SPEED);
-  chassis.wait_drive();
-}
+
 
 void backDrivePush() {
   chassis.set_drive_pid(-40, DRIVE_SPEED);
@@ -361,10 +350,42 @@ void suicide_denial() {
   chassis.wait_drive();
 
   leftWing.set_value(1);
-  chassis.set_drive_pid(25, DRIVE_SPEED);
+  chassis.set_drive_pid(23, DRIVE_SPEED);
   chassis.wait_drive();
 
   flywheel = -127;
+}
+
+void suicide_denial2() {
+  chassis.set_drive_brake(MOTOR_BRAKE_BRAKE);
+  intake.set_brake_modes(MOTOR_BRAKE_HOLD);
+  flywheel.set_brake_mode(MOTOR_BRAKE_COAST);
+
+  chassis.set_angle(11.31);
+
+  intake = -30;
+  chassis.wait_drive();
+  chassis.set_drive_pid(40, DRIVE_SPEED);
+  chassis.wait_drive();
+  chassis.set_drive_pid(10, 110);
+  pros::delay(160);
+  chassis.wait_drive();
+  intake = 100;
+  pros::delay(200);
+  chassis.wait_drive();
+  chassis.set_drive_pid(-4, DRIVE_SPEED);
+  chassis.wait_drive();
+  chassis.set_swing_pid(ez::RIGHT_SWING, 75, SWING_SPEED);
+  chassis.wait_drive();
+  chassis.set_drive_pid(15, DRIVE_SPEED);
+  chassis.wait_drive();
+  leftWing.set_value(1);
+  chassis.wait_drive();
+  chassis.set_swing_pid(ez::RIGHT_SWING, 90, SWING_SPEED);
+  chassis.wait_drive();
+  chassis.set_drive_pid(12, DRIVE_SPEED);
+  chassis.wait_drive();
+
 }
 
 void skills() {
