@@ -25,6 +25,7 @@ void safe_score();
 void moderate_score();
 void suicide_score();
 void safe_denial();
+void safe_denial2();
 void moderate_denial();
 void suicide_denial();
 void suicide_denial2();
