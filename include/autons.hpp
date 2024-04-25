@@ -3,11 +3,15 @@
 #include "EZ-Template/drive/drive.hpp"
 
 extern Drive chassis;
-extern pros::Motor flywheel;
 extern pros::Motor_Group intake;
 extern pros::ADIDigitalOut rightWing;
 extern pros::ADIDigitalOut leftWing;
-extern pros::ADIDigitalOut rachet;
+extern pros::ADIDigitalOut backLeftWing;
+extern pros::ADIDigitalOut backRightWing;
+extern pros::ADIDigitalOut kickstand;
+extern pros::ADIDigitalOut climb;
+extern pros::ADIDigitalOut kickstandExt;
+
 
 /*
 void auton_example();
@@ -20,19 +24,11 @@ void interfered_example();
 */
 
 void test();
-void backDrivePush();
-void safe_score();
-void moderate_score();
-void suicide_score();
-void safe_denial();
-void safe_denial2();
-void moderate_denial();
-void suicide_denial();
-void suicide_denial2();
-void skillsAuto();
-
-void skills();
-void skills2();
+void SafeScore();
+void SuicideDenial();
+void SafeDenial();
+void SuicideDenial();
+void SuicideScore();
 
 void suicide_constants();
 void default_constants();

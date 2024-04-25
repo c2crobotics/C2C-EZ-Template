@@ -4,48 +4,54 @@
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
 // drive motors
-pros::Motor lF(-20, pros::E_MOTOR_GEARSET_06); // left front motor. port 11, reversed
-pros::Motor lT(9, pros::E_MOTOR_GEARSET_06); // left top motor. port 12
-pros::Motor lB(-10, pros::E_MOTOR_GEARSET_06); // left bottom motor. port 13, reversed
-pros::Motor rF(11, pros::E_MOTOR_GEARSET_06); // right front motor. port 1
-pros::Motor rT(-2, pros::E_MOTOR_GEARSET_06); // right top motor. port 2, reversed
-pros::Motor rB(1, pros::E_MOTOR_GEARSET_06); // right bottom motor. port 3
-
-// flywheel motor
-pros::Motor flywheel(-21, pros::E_MOTOR_GEARSET_06); // flywheel motor. port 21
+pros::Motor lF(-18, pros::E_MOTOR_GEARSET_06); // left front motor. port 11, reversed
+pros::Motor lM(-19, pros::E_MOTOR_GEARSET_06); // left top motor. port 12
+pros::Motor lB(-20, pros::E_MOTOR_GEARSET_06); // left bottom motor. port 13, reversed
+pros::Motor rF(13, pros::E_MOTOR_GEARSET_06); // right front motor. port 1
+pros::Motor rM(12, pros::E_MOTOR_GEARSET_06); // right top motor. port 2, reversed
+pros::Motor rB(11, pros::E_MOTOR_GEARSET_06); // right bottom motor. port 3
 
 // intake motors
-pros::Motor intakeL(19, pros::E_MOTOR_GEARSET_18);
-pros::Motor intakeR(-12, pros::E_MOTOR_GEARSET_18);
+pros::Motor intakeL(10, pros::E_MOTOR_GEARSET_06);
+pros::Motor intakeR(-1, pros::E_MOTOR_GEARSET_06);
 
 // motor groups
-pros::MotorGroup leftDrive({lF, lT, lB}); // left motor group
-pros::MotorGroup rightDrive({rF, rT, rB}); // right motor group
-
+pros::MotorGroup leftDrive({lF, lM, lB}); // left motor group
+pros::MotorGroup rightDrive({rF, rM, rB}); // right motor group
 pros::MotorGroup intake({intakeL, intakeR});
 
 // Inertial Sensor on port 11
-pros::Imu imu(3);
+pros::Imu imu(7);
 
-pros::ADIDigitalOut rightWing('B');
-pros::ADIDigitalOut leftWing('A');
+pros::ADIDigitalOut leftWing('B');
+pros::ADIDigitalOut rightWing('D');
+pros::ADIDigitalOut backLeftWing('H');
+pros::ADIDigitalOut backRightWing('E');
+pros::ADIDigitalOut climb('F');
+pros::ADIDigitalOut kickstand('C');
+
+pros::ADIDigitalOut triExpander(8);
+
+#define EXT_ADI_SMART_PORT 4
+#define kickstandExtPort 'A'
+pros::ADIDigitalOut kickstandExt ({{EXT_ADI_SMART_PORT, kickstandExtPort}});
 
 // Chassis constructor
 Drive chassis (
   // Left Chassis Ports (negative port will reverse it!)
   //   the first port is the sensored port (when trackers are not used!)
-  {-20, 9, -10}
+  {-18, -19, -20}
 
   // Right Chassis Ports (negative port will reverse it!)
   //   the first port is the sensored port (when trackers are not used!)
-  ,{11, -2, 1}
+  ,{13, 12, 11}
 
   // IMU Port
-  ,3
+  ,7
 
   // Wheel Diameter (Remember, 4" wheels are actually 4.125!)
   //    (or tracking wheel diameter)
-  ,2.75
+  ,3.246
 
   // Cartridge RPM
   //   (or tick per rotation if using tracking wheels)
@@ -88,10 +94,8 @@ void initialize() {
   
   pros::delay(500); // Stop the user from doing anything while legacy ports configure.
 
-  intakeL.set_voltage_limit(5500);
-  intakeR.set_voltage_limit(5500);
+
   
-  intakeL.set_zero_position(intakeL.get_position());
 
   // Configure your chassis controls
   chassis.toggle_modify_curve_with_controller(true); // Enables modifying the controller curve with buttons on the joysticks
@@ -106,7 +110,7 @@ void initialize() {
 
   // Autonomous Selector using LLEMU
   ez::as::auton_selector.add_autons({
-    Auton("suicide_denial", suicide_denial),
+    Auton("safe_denial", SafeDenial),
     //Auton("Example Turn\n\nTurn 3 times.", turn_example),
     /*
     Auton("Drive and Turn\n\nDrive forward, turn, come back. ", drive_and_turn),
@@ -203,119 +207,89 @@ double iTime = 0;
  * Runs in driver control
  */
 void opcontrol() {
-    chassis.set_drive_brake(MOTOR_BRAKE_HOLD);
-    flywheel.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-    intakeL.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-    intakeR.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);                                  
+    lF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    lM.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    lB.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    rF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    rM.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    rB.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    intakeL.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    intakeR.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 
-    double ivanSens = 0.6;
+    double ivanSens = 0.75;
     double vincentSens = 0.7;
     double devSens = 0.75;
 
-    double driverSens = devSens;
+    double driverSens = ivanSens;
 
+    //**TOGGLES**//
+    int climbState = 0;
+    double cPrevTime = -40000;
+    double cTime = 0;
+
+    int kickState = 0;
+    double kPrevTime = -40000;
+    double kTime = 0;
+    //**//
+  bool brakeFlag = false;
     // controller
     // loop to continuously update motors
     while (true) {
-        pros::lcd::print(3, "Motor: %f", intakeL.get_position());
-
-        // get joystick positions
+      
         chassis.arcade_standard(ez::SPLIT); // Standard split arcade
-
-        //Macro Code//////////////////////////////////////////////////////////////
-        if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){
-            fPrevTime = fTime;
-            fTime = pros::millis();
-            if(fTime - fPrevTime < 400){
-                flyToggle = 1;
-            }
-            else{
-                flyToggle = 0;
-            }
-        }  
-        if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1)){
-            iPrevTime = iTime;
-            iTime = pros::millis();
-            if(iTime - iPrevTime < 400){
-                intakeToggle = 1;
-            }
-            else{
-                intakeToggle = 0;
-            }
+        //Intake R1 R2
+        if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
+            intake = 127;
         }
-///////////////////////////////////////////////////////////////////////////////////
-
-        if(master.get_digital(pros::E_CONTROLLER_DIGITAL_A)){
-          intakeL.set_zero_position(0);
-        }
-
-        if(flyToggle == 0) {
-            if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
-                flywheel = -120;
-            }
-            else {
-                flywheel = 0;
-            }
-        }
-        else if(flyToggle == 1) {
-            flywheel = 100;
+        else if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
+            intake = -127;
         }
         else {
-            return;
+            intake = 0;
+        }
+        //////////////////////////////////////////////////////////////////////////////////////////////////
+        if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)){
+            climbState++;
+            climb.set_value(climbState % 2);
+        }
+        if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)){
+            kickState++;
+            kickstand.set_value(kickState % 2);
+        }
+////////////////////////////////////////////////////////////////////////////
+        if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1) || master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)){
+            brakeFlag = true;
+        } else {
+            brakeFlag = false;
+        }
+        ////////////////////////////////////////////////////////////////////////////
+        if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)){
+            rightWing.set_value(1);
+        } else {
+            rightWing.set_value(0);
+        }
+        if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)){
+            leftWing.set_value(1);
+        } else {
+            leftWing.set_value(0);
+        }
+        if(master.get_digital(pros::E_CONTROLLER_DIGITAL_Y)){
+            backRightWing.set_value(1);
+        } else {
+            backRightWing.set_value(0);
+        }
+        if(master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)){
+            backLeftWing.set_value(1);
+        } else {
+            backLeftWing.set_value(0);
+        }
+        
+        if(master.get_digital(pros::E_CONTROLLER_DIGITAL_UP)){
+            kickstandExt.set_value(1);
+        } else {
+            kickstandExt.set_value(0);
         }
 
-        if(intakeToggle == 0) {
-            if(master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
-                if(intakeL.get_position() < 350 && intakeL.get_position() > 250){
-                  intake = 10;
-                  intake.set_brake_modes(MOTOR_BRAKE_HOLD);
-                }
-                else {
-                  intake = 120;
-                }
-            }
-            else {
-              if(intakeL.get_position() < 100) {
-                intake.set_brake_modes(MOTOR_BRAKE_BRAKE);
-                intake = 0;
-                intake.set_brake_modes(MOTOR_BRAKE_COAST);
-              }
-              else {
-                intake = -intakeL.get_position()/7;
-              }
-            }
-        }
-        else if(intakeToggle == 1) {
-            if(intakeL.get_position() > 550) {
-              intake = 20;
-            }
-            else if(intakeL.get_position() > 650) {
-              intake = 0;
-              intake.set_brake_modes(MOTOR_BRAKE_HOLD);
-            }
-            else {
-              intake = 120;
-            }
-        }
-        else {
-            return;
-        }
-
-    //WINGS
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)){
-      leftWing.set_value(1);
-    }
-    else{
-      leftWing.set_value(0);
-    }
-    if(master.get_digital(pros::E_CONTROLLER_DIGITAL_B)){
-      rightWing.set_value(1);
-    }
-    else{
-      rightWing.set_value(0);
-    }
-
-        // delay to save resources
-        pros::delay(ez::util::DELAY_TIME);
+        pros::delay(10);
     }
 }
